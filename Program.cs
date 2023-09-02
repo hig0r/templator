@@ -190,11 +190,15 @@ public static class SpreadsheetUtils
 {
     public static string GetCellValue(this SpreadsheetDocument spreadsheet, Row row, int columnIndex)
     {
-        return spreadsheet.WorkbookPart!
-            .GetPartsOfType<SharedStringTablePart>()
-            .First()
-            .SharedStringTable
-            .ElementAt(int.Parse(row.ElementAt(columnIndex).InnerText))
-            .InnerText;
+        var cell = row.Descendants<Cell>().ElementAt(columnIndex);
+        return cell.DataType?.Value switch
+        {
+            CellValues.Number => cell.InnerText,
+            CellValues.SharedString => spreadsheet.WorkbookPart!.GetPartsOfType<SharedStringTablePart>()
+                .First()
+                .SharedStringTable.ElementAt(int.Parse(cell.InnerText))
+                .InnerText,
+            _ => ""
+        };
     }
 }
